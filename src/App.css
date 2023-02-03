@@ -1,15 +1,9 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
 canvas {
   background-color: rgb(215, 255, 255);
-  height: 80vh;
-}
-
-p.colorInput {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-h1 {
-  text-align: center;
-  font-family: sans-serif;
+  height: 100vh;
 }
