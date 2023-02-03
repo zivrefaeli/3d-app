@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 // r = SIZE + GAP  |   edge distance from center 
 // R = r * sqrt(2) | corner distance from center
