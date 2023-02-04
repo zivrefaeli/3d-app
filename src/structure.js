@@ -74,19 +74,19 @@ export const Face = {
     }
   },
 
-  getSharedValueIndex(index) {
-    switch (index) {
-      case 12:
-      case 14:
-        return 0 // x [yz]
+  getSharedValue(face) {
+    switch (face) {
+      case this.left:
+      case this.right:
+        return 'x' // x [yz]
 
-      case 10:
-      case 16:
-        return 1 // y [xz]
+      case this.top:
+      case this.bottom:
+        return 'y' // y [xz]
 
-      case 4:
-      case 22:
-        return 2 // z [xy]
+      case this.front:
+      case this.back:
+        return 'z' // z [xy]
 
       default:
         return null
@@ -134,13 +134,14 @@ class Cube {
     }
 
     this.piecesArray = this.pieces.flat(3)
+
+    this.faceAngles = {}
+    const faces = Object.values(Face).filter(value => typeof (value) == 'string')
+    faces.forEach(face => this.faceAngles[face] = 0)
   }
 
   getFace(face) {
     const facePieces = []
-
-    // let constValue, outerStart, innerStart
-    // let constIndex, outerIndex, innerIndex
 
     switch (face) {
       case Face.front:
@@ -149,13 +150,6 @@ class Cube {
             facePieces.push(this.pieces[0][y][x])
           }
         }
-        // constIndex = 0
-        // outerIndex = 1
-        // innerIndex = 2
-
-        // constValue = 0
-        // outerStart = 0
-        // innerStart = 0
         break
 
       case Face.back:
@@ -164,14 +158,6 @@ class Cube {
             facePieces.push(this.pieces[2][y][x])
           }
         }
-        // [2][i][j]
-        // constIndex = 0
-        // outerIndex = 1
-        // innerIndex = 2
-
-        // constValue = 2
-        // outerStart = 0
-        // innerStart = 2
         break
 
       case Face.top:
@@ -180,15 +166,6 @@ class Cube {
             facePieces.push(this.pieces[z][0][x])
           }
         }
-        // [i][0][j]
-
-
-        // constIndex = 1
-        // outerIndex = 0
-        // innerIndex = 2
-        // constValue = 0
-        // outerStart = 2
-        // innerStart = 0
         break
 
       case Face.bottom:
@@ -197,17 +174,6 @@ class Cube {
             facePieces.push(this.pieces[z][2][x])
           }
         }
-        // constIndex = 1
-        // outerIndex = 0
-        // innerIndex = 2
-        // [i][2][j]
-
-        // constIndex = 1
-        // outerIndex = 0
-        // innerIndex = 2
-        // constValue = 2
-        // outerStart = 0
-        // innerStart = 0
         break
 
       case Face.right:
@@ -216,17 +182,6 @@ class Cube {
             facePieces.push(this.pieces[z][y][2])
           }
         }
-        // constIndex = 2
-        // outerIndex = 1
-        // innerIndex = 0
-        // [j][i][2]
-
-        // constIndex = 2
-        // outerIndex = 1
-        // innerIndex = 0
-        // constValue = 2
-        // outerStart = 0
-        // innerStart = 0
         break
 
       case Face.left:
@@ -235,52 +190,54 @@ class Cube {
             facePieces.push(this.pieces[z][y][0])
           }
         }
-        // // [j][i][0]
-        // constIndex = 2
-        // outerIndex = 1
-        // innerIndex = 0
-
-        // constIndex = 2
-        // outerIndex = 1
-        // innerIndex = 0
-        // constValue = 0
-        // outerStart = 0
-        // innerStart = 2
         break
 
       default:
         return null
     }
 
-    // let outerEnd = 2 - outerStart, innerEnd = 2 - innerStart
-    // const outerDelta = outerStart < outerEnd ? 1 : -1
-    // const innerDelta = innerStart < innerEnd ? 1 : -1
-
-    // outerEnd += outerDelta
-    // innerEnd += innerDelta
-
-    // console.log(outerStart, outerEnd)
-
-    // const values = Array(3).fill(0)
-    // values[constIndex] = constValue
-
-    // let i = outerStart, j
-    // while (i !== outerEnd) {
-    //   j = innerStart
-
-    //   while (j < innerEnd) {
-    //     values[outerIndex] = i
-    //     values[innerIndex] = j
-    //     console.log('v', values);
-    //     facePieces.push(this.pieces[values[0]][values[1]][values[2]])
-
-    //     j += innerDelta
-    //   }
-    //   i += outerDelta
-    // }
-
     return facePieces
   }
 }
 
 export default Cube
+
+
+/* let constValue, outerStart, innerStart
+let constIndex, outerIndex, innerIndex
+ 
+front:
+constIndex = 0
+outerIndex = 1
+innerIndex = 2
+
+constValue = 0
+outerStart = 0
+innerStart = 0
+
+let outerEnd = 2 - outerStart, innerEnd = 2 - innerStart
+const outerDelta = outerStart < outerEnd ? 1 : -1
+const innerDelta = innerStart < innerEnd ? 1 : -1
+
+outerEnd += outerDelta
+innerEnd += innerDelta
+
+console.log(outerStart, outerEnd)
+
+const values = Array(3).fill(0)
+values[constIndex] = constValue
+
+let i = outerStart, j
+while (i !== outerEnd) {
+  j = innerStart
+
+  while (j < innerEnd) {
+    values[outerIndex] = i
+    values[innerIndex] = j
+    console.log('v', values);
+    facePieces.push(this.pieces[values[0]][values[1]][values[2]])
+
+    j += innerDelta
+  }
+  i += outerDelta
+} */
