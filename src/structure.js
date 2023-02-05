@@ -103,12 +103,12 @@ function transform(position) {
 }
 
 class Piece {
-  constructor(index, position, blocks) {
-    this.index = index
+  constructor(meshIndex, position, blocks) {
+    this.meshIndex = meshIndex
     this.position = position
     this.blocks = blocks
 
-    this.transformedPos = transform(position)
+    this.realPos = transform(position)
     this.type = Type.getByPosition(position)
   }
 }
@@ -118,7 +118,7 @@ class Cube {
 
   constructor() {
     this.pieces = [] // this.pieces[z][y][x]
-    let index = 0
+    let meshIndex = 0
 
     for (let z = 0; z < 3; z++) {
       this.pieces.push([])
@@ -127,17 +127,13 @@ class Cube {
         this.pieces[z].push([])
 
         for (let x = 0; x < 3; x++) {
-          this.pieces[z][y].push(new Piece(index, [x, y, z], []))
-          index++
+          this.pieces[z][y].push(new Piece(meshIndex, [x, y, z], []))
+          meshIndex++
         }
       }
     }
 
     this.piecesArray = this.pieces.flat(3)
-
-    this.faceAngles = {}
-    const faces = Object.values(Face).filter(value => typeof (value) == 'string')
-    faces.forEach(face => this.faceAngles[face] = 0)
   }
 
   getFace(face) {
@@ -197,6 +193,21 @@ class Cube {
     }
 
     return facePieces
+  }
+
+  // TODO: rotate face clockwise / counterclockwise - more efficient
+  rotateFace(pieces, clockwise) {
+    let index = pieces[0].meshIndex
+    pieces[0].meshIndex = pieces[2].meshIndex
+    pieces[2].meshIndex = pieces[8].meshIndex
+    pieces[8].meshIndex = pieces[6].meshIndex
+    pieces[6].meshIndex = index
+
+    index = pieces[1].meshIndex
+    pieces[1].meshIndex = pieces[5].meshIndex
+    pieces[5].meshIndex = pieces[7].meshIndex
+    pieces[7].meshIndex = pieces[3].meshIndex
+    pieces[3].meshIndex = index
   }
 }
 
