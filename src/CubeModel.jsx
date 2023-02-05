@@ -27,112 +27,128 @@ function getFaceSettings(face) {
   }
 }
 
-function convert(obj) {
-  return [obj.x, obj.y, obj.z]
+function format3D(object) {
+  return [object.x, object.y, object.z]
 }
 
-// TODO: on rotate animation completed, swap face pieces !
-//       start at line #82
+function degreesToRadians(degrees) {
+  return degrees * Math.PI / 180
+}
+
+function getColor(index) {
+  switch (index) {
+    case 0:
+      return 0x8ecae6
+
+    case 2:
+      return 0x023047
+
+    case 6:
+      return 0x8ac926
+
+    case 8:
+      return 0xfb8500
+
+    case 18:
+      return 0xbc6c25
+
+    case 20:
+      return 0x606c38
+
+    case 24:
+      return 0xffafcc
+
+    case 26:
+      return 0x48cae4
+
+    default:
+      return 0xff0000
+  }
+}
+
+const log = console.log
+const cube = new Cube()
+const clockwise = false
+const targetAngle = clockwise ? -90 : 90, delta = clockwise ? -1 : 1
+const rotateInit = { face: null, moving: false, angle: 0, target: 0 }
 
 export default function CubeModel() {
-  const [cube, setCube] = useState(new Cube())
-  const [rotate, setRotate] = useState({ face: null, moving: false, angle: 0, target: 0 })
+  const [rotate, setRotate] = useState(rotateInit)
   const [settings, setSettings] = useState(getFaceSettings(null))
-  const [face, setFace] = useState(null) // Array of Pieces
-  const refs = useRef([]) // Array of Meshes
+  const [face, setFace] = useState(null) // array of Pieces
+  const meshes = useRef([]) // array of Meshes
 
-  const degreesToRadians = degrees => degrees * Math.PI / 180
+  const getMesh = index => meshes.current[index]
 
-  const getColor = index => {
-    switch (index) {
-      case 0:
-        return 0xfcba03
-
-      case 2:
-        return 0x45fc03
-
-      case 6:
-        return 0x33ffe4
-
-      case 8:
-        return 0x3a1d91
-
-      case 18:
-        return 0xc40ec4
-
-      case 20:
-        return 0xf56122
-
-      case 24:
-        return 0xff45ae
-
-      case 26:
-        return 0x0b00b0
-
-      default:
-        return 0xff0000
-    }
+  const resetFaceMeshes = () => {
+    face.forEach(piece => {
+      const mesh = getMesh(piece.meshIndex)
+      // reset rotation
+      mesh.rotation.x = 0
+      mesh.rotation.y = 0
+      mesh.rotation.z = 0
+      // TODO: set position to realPos
+      const [x, y, z] = piece.realPos
+      mesh.position.x = x
+      mesh.position.y = y
+      mesh.position.z = z
+    })
   }
 
   useFrame(() => {
     if (face == null) {
-      return
+      return // if haven't clicked on center / completed rotation, wait...
     }
-    if (rotate.angle === rotate.target) {
-      cube.faceAngles[rotate.face] = rotate.angle % 360
-      setRotate({ face: null, moving: false, angle: 0, target: 0 })
+
+    // if cube completed full 90deg rotation, stop
+    if (rotate.angle === rotate.target + delta) {
+      cube.rotateFace(face, clockwise)
+      resetFaceMeshes()
+      log(cube)
+
+      setRotate(rotateInit)
       setFace(null)
       return
     }
 
+    // rotate meshes by settings
+
     const { commonAxis, cosAxis, sinAxis, angleSign, cosSign, sinSign } = settings
     const angle = rotate.angle
 
-    if (angle === 0) {
-      console.log(commonAxis, cosAxis, sinAxis, angleSign, cosSign, sinSign)
-    }
-
-    const centerMesh = refs.current[face[4].index]
+    const centerMesh = getMesh(face[4].meshIndex)
     centerMesh.rotation[commonAxis] = degreesToRadians(angleSign * angle)
 
     for (let i = 0; i < cube.angles.length; i++) {
       const radius = i % 2 === 0 ? r : R
       const faceIndex = cube.angles[i]
 
-      const mesh = refs.current[face[faceIndex].index]
-      // if (angle === 0 || angle === 89) {
-      //   console.log(face[faceIndex].index, convert(mesh.position), convert(mesh.rotation))
-      // }
+      const mesh = getMesh(face[faceIndex].meshIndex)
 
       mesh.position[cosAxis] = centerMesh.position[cosAxis] + cosSign * radius * Math.cos(degreesToRadians(angle + i * 45))
       mesh.position[sinAxis] = centerMesh.position[sinAxis] + sinSign * radius * Math.sin(degreesToRadians(angle + i * 45))
-
-      mesh.rotation[commonAxis] = degreesToRadians(angleSign * angle)
+      mesh.rotation[commonAxis] = centerMesh.rotation[commonAxis]
     }
 
-    
-    setRotate({ ...rotate, angle: angle + 1 })
+    setRotate({ ...rotate, angle: angle + delta })
   })
 
   return (
     cube.piecesArray.map((piece, index) => (
       <mesh
-        ref={meshRef => refs.current[index] = meshRef}
-        position={piece.transformedPos}
+        ref={meshRef => meshes.current[index] = meshRef} // init meshes
+        position={piece.realPos}
         key={index}
         onClick={e => {
           if (e.object.uuid !== e.intersections[0].object.uuid)
+            return // preform click only on the clicked piece, and not its intersections
+
+          log(getMesh(index).position)
+          if (piece.type !== Type.center || rotate.moving)
             return
-          console.log(refs.current[index].position)
-          if (piece.type !== Type.center || rotate.moving) {
-            return
-          }
 
           const selectedFace = Face.getByIndex(index)
-          // const angle = cube.faceAngles[selectedFace]
-          // console.log(angle)
-
-          setRotate({ face: selectedFace, moving: true, angle: rotate.angle, target: rotate.angle + 90 })
+          setRotate({ face: selectedFace, moving: true, angle: 0, target: targetAngle })
           setSettings(getFaceSettings(selectedFace))
           setFace(cube.getFace(selectedFace))
         }}>
@@ -142,10 +158,3 @@ export default function CubeModel() {
     ))
   )
 }
-
-// console.log('rotate face', face)
-// console.log('center position', piece.position)
-// const sharedIndex = Face.getSharedValueIndex(index)
-// const sharedAxis = 'xyz'.charAt(sharedIndex)
-// console.log('shared face value is', sharedAxis, '=', piece.position[sharedIndex])
-// console.log('surface', 'xyz'.replace(sharedAxis, ''))
