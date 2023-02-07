@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import Cube, { Face, Type, size, r, R } from './structure'
+
 
 function getFaceSettings(face) {
   switch (face) {
@@ -66,13 +67,15 @@ function getColor(index) {
   }
 }
 
+
 const log = console.log
 const cube = new Cube()
-const clockwise = false
-const targetAngle = clockwise ? -90 : 90, delta = clockwise ? -1 : 1
-const rotateInit = { face: null, moving: false, angle: 0, target: 0 }
+const rotateInit = { face: null, moving: false, angle: 0, target: 0, delta: -1 }
+
+log('%cCube Initialize', 'color:red; font-size:1rem')
 
 export default function CubeModel() {
+  const [clockwise, setClockwise] = useState(true)
   const [rotate, setRotate] = useState(rotateInit)
   const [settings, setSettings] = useState(getFaceSettings(null))
   const [face, setFace] = useState(null) // array of Pieces
@@ -95,14 +98,24 @@ export default function CubeModel() {
     })
   }
 
+  useEffect(() => {
+    log('effect called')
+
+    window.onkeydown = e => e.key === 'Shift' && setClockwise(false)
+    window.onkeyup = e => e.key === 'Shift' && setClockwise(true)
+  }, [])
+
+  useEffect(() => {
+    log('direction:', clockwise ? 'clockwise' : 'counterclockwise')
+  }, [clockwise])
+
   useFrame(() => {
-    if (face == null) {
+    if (face == null)
       return // if haven't clicked on center / completed rotation, wait...
-    }
 
     // if cube completed full 90deg rotation, stop
-    if (rotate.angle === rotate.target + delta) {
-      cube.rotateFace(face, clockwise)
+    if (rotate.angle === rotate.target + rotate.delta) {
+      cube.rotateFace(face, rotate.delta === -1)
       resetFaceMeshes()
       log(cube)
 
@@ -130,7 +143,7 @@ export default function CubeModel() {
       mesh.rotation[commonAxis] = centerMesh.rotation[commonAxis]
     }
 
-    setRotate({ ...rotate, angle: angle + delta })
+    setRotate({ ...rotate, angle: angle + rotate.delta })
   })
 
   return (
@@ -143,12 +156,12 @@ export default function CubeModel() {
           if (e.object.uuid !== e.intersections[0].object.uuid)
             return // preform click only on the clicked piece, and not its intersections
 
-          log(getMesh(index).position)
+          log(format3D(getMesh(index).position))
           if (piece.type !== Type.center || rotate.moving)
             return
 
           const selectedFace = Face.getByIndex(index)
-          setRotate({ face: selectedFace, moving: true, angle: 0, target: targetAngle })
+          setRotate({ face: selectedFace, moving: true, angle: 0, target: clockwise ? -90 : 90, delta: clockwise ? -1 : 1 })
           setSettings(getFaceSettings(selectedFace))
           setFace(cube.getFace(selectedFace))
         }}>
