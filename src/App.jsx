@@ -8,7 +8,7 @@ export default function App() {
   return (<>
     <Canvas>
       <OrbitControls />
-      <ambientLight />
+      <ambientLight intensity={.8} />
       <VisibleLight position={[10, 10, 10]} />
 
       {/* <mesh>
