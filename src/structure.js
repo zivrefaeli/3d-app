@@ -114,6 +114,12 @@ class Piece {
 }
 
 class Cube {
+  /* Face indexes
+   0 | 1 | 2 
+  ---+---+---
+   3 | 4 | 5 
+  ---+---+---
+   6 | 7 | 8 */
   angles = [5, 2, 1, 0, 3, 6, 7, 8]
 
   constructor() {
@@ -195,60 +201,28 @@ class Cube {
     return facePieces
   }
 
-  // TODO: rotate face clockwise / counterclockwise - more efficient
   rotateFace(pieces, clockwise) {
-    let index = pieces[0].meshIndex
-    pieces[0].meshIndex = pieces[2].meshIndex
-    pieces[2].meshIndex = pieces[8].meshIndex
-    pieces[8].meshIndex = pieces[6].meshIndex
-    pieces[6].meshIndex = index
+    let [start, end, delta] = [0, this.angles.length - 2, 1]
 
-    index = pieces[1].meshIndex
-    pieces[1].meshIndex = pieces[5].meshIndex
-    pieces[5].meshIndex = pieces[7].meshIndex
-    pieces[7].meshIndex = pieces[3].meshIndex
-    pieces[3].meshIndex = index
+    if (!clockwise) {
+      start = this.angles.length - 1
+      end = 1
+      delta = -1
+    }
+
+    let i = start
+    const edgeIndex = pieces[this.angles[start]].meshIndex
+    const cornerIndex = pieces[this.angles[start + delta]].meshIndex
+
+    while (i !== end) {
+      const [current, next] = [this.angles[i], this.angles[i + 2 * delta]]
+      pieces[current].meshIndex = pieces[next].meshIndex
+      i += delta
+    }
+
+    pieces[this.angles[i]].meshIndex = edgeIndex
+    pieces[this.angles[i + delta]].meshIndex = cornerIndex
   }
 }
 
 export default Cube
-
-
-/* let constValue, outerStart, innerStart
-let constIndex, outerIndex, innerIndex
- 
-front:
-constIndex = 0
-outerIndex = 1
-innerIndex = 2
-
-constValue = 0
-outerStart = 0
-innerStart = 0
-
-let outerEnd = 2 - outerStart, innerEnd = 2 - innerStart
-const outerDelta = outerStart < outerEnd ? 1 : -1
-const innerDelta = innerStart < innerEnd ? 1 : -1
-
-outerEnd += outerDelta
-innerEnd += innerDelta
-
-console.log(outerStart, outerEnd)
-
-const values = Array(3).fill(0)
-values[constIndex] = constValue
-
-let i = outerStart, j
-while (i !== outerEnd) {
-  j = innerStart
-
-  while (j < innerEnd) {
-    values[outerIndex] = i
-    values[innerIndex] = j
-    console.log('v', values);
-    facePieces.push(this.pieces[values[0]][values[1]][values[2]])
-
-    j += innerDelta
-  }
-  i += outerDelta
-} */
