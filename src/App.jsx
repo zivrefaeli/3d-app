@@ -8,21 +8,15 @@ export default function App() {
   return (<>
     <Canvas>
       <OrbitControls />
-      <ambientLight intensity={.8} />
-      <VisibleLight position={[10, 10, 10]} />
-
-      {/* <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial attach={'material-0'} color={0x00ff00} />
-        <meshStandardMaterial attach={'material-1'} color={0x000ff0} />
-        <meshStandardMaterial attach={'material-2'} color={0x0000ff} />
-      </mesh> */}
+      <ambientLight />
+      <VisibleLight intensity={.3} position={[0, 10, 0]} />
+      <VisibleLight intensity={.5} position={[10, 10, 10]} />
 
       <CubeModel />
 
       <mesh
         rotation-x={-Math.PI / 2}
-        position-y={-3}>
+        position-y={-6}>
         <planeGeometry args={[20, 20]} />
         <meshStandardMaterial color={0xf0f0f0} />
       </mesh>
