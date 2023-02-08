@@ -1,10 +1,49 @@
+/* eslint-disable no-fallthrough */
 export const Blocks = {
   green: 'green',
   blue: 'blue',
   white: 'white',
   yellow: 'yellow',
   red: 'red',
-  orange: 'orange'
+  orange: 'orange',
+
+  getInitial(material) {
+    switch (material) {
+      case 0:
+        return this.red
+      case 1:
+        return this.orange
+      case 2:
+        return this.white
+      case 3:
+        return this.yellow
+      case 4:
+        return this.green
+      case 5:
+        return this.blue
+      default:
+        return null
+    }
+  },
+
+  getValue(block) {
+    switch (block) {
+      case this.red:
+        return 0xff4040
+      case this.orange:
+        return 0xfc9e3f
+      case this.white:
+        return 0xffffff
+      case this.yellow:
+        return 0xffe417
+      case this.green:
+        return 0x36d600
+      case this.blue:
+        return 0x483efa
+      default:
+        return 0x404040 // innerColor
+    }
+  }
 }
 
 export const Type = {
@@ -102,14 +141,27 @@ function transform(position) {
   return [x - 1, 1 - y, 1 - z].map(dim => dim * r)
 }
 
-class Piece {
-  constructor(meshIndex, position, blocks) {
-    this.meshIndex = meshIndex
-    this.position = position
-    this.blocks = blocks
+function insert(array, value) {
+  array.splice(0, 0, value)
+}
 
+class Piece {
+  constructor(meshIndex, position, materials) {
+    // constants
+    this.position = position
     this.realPos = transform(position)
-    this.type = Type.getByPosition(position)
+    this.materials = materials
+    this.type = Type.getByBlocks(materials.length)
+
+    // mutable
+    this.meshIndex = meshIndex
+    this.blocks = materials.map(value => Blocks.getInitial(value))
+
+    // add materials with innerColor
+    for (let mat = 0; mat < 6; mat++) {
+      if (!this.materials.includes(mat))
+        this.materials.push(mat)
+    }
   }
 }
 
@@ -131,9 +183,13 @@ class Cube {
 
       for (let y = 0; y < 3; y++) {
         this.pieces[z].push([])
+        const middle = this.#getMidIndexes(z)
 
         for (let x = 0; x < 3; x++) {
-          this.pieces[z][y].push(new Piece(meshIndex, [x, y, z], []))
+          const blocks = this.#getBlocksIndexes(y, middle[x])
+          const piece = new Piece(meshIndex, [x, y, z], blocks)
+
+          this.pieces[z][y].push(piece)
           meshIndex++
         }
       }
@@ -222,6 +278,48 @@ class Cube {
 
     pieces[this.angles[i]].meshIndex = edgeIndex
     pieces[this.angles[i + delta]].meshIndex = cornerIndex
+  }
+
+  #getMidIndexes(z) {
+    const mid = [[1], [], [0]]
+    switch (z) {
+      case 0:
+        mid[0].push(4)
+        mid[1].push(4)
+        insert(mid[2], 4)
+
+      case 1:
+        break
+
+      case 2:
+        insert(mid[0], 5)
+        mid[1].push(5)
+        mid[2].push(5)
+        break
+
+      default:
+        return null
+    }
+    return mid
+  }
+
+  #getBlocksIndexes(y, mid) {
+    switch (y) {
+      case 0:
+        insert(mid, 2) // top
+
+      case 1:
+        break
+
+      case 2:
+        mid.reverse()
+        insert(mid, 3) // bottom
+        break
+
+      default:
+        return null
+    }
+    return mid
   }
 }
 
