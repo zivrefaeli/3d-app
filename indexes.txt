@@ -1,0 +1,51 @@
+format
+corners: 
+    1. top-left-right    y = 0
+    2. bottom-right-left y = 2
+edges: 
+    1. top-front    y = 0
+    2. left-right   y = 1
+    3. bottom-front y = 2
+
+0 | corner | 2 1 4 | (0, 0, 0)
+1 | edge   | 2 4   | (1, 0, 0)
+2 | corner | 2 4 0 | (2, 0, 0)
+
+3 | edge   | 1 4   | (0, 1, 0)
+4 | center | 4     | (1, 1, 0)
+5 | edge   | 4 0   | (2, 1, 0)
+
+6 | corner | 3 4 1 | (0, 2, 0)
+7 | edge   | 3 4   | (1, 2, 0)
+8 | corner | 3 0 4 | (2, 2, 0)
+
+
+z = 0: [[1, 4], [4], [4, 0]]
+z = 1: [[1], [], [0]]
+z = 2: [[5, 1], [5], [0, 5]]
+
+
+mid_layer = [
+    [a, b],
+    [c],
+    [d, e]
+]
+
+top_layer = [     bottom_layer = [
+    [2, a, b],        [3, b, a],
+    [2, c],           [3, c],
+    [2, d, e]         [3, e, d]
+]                 ]
+
+
+z = 1: (test)
+
+mid = [
+    [1], [], [0]
+]
+
+=>
+ 
+top_layer = [              bottom_layer = [          
+    [2, 1], [2], [2, 0]        [3, 1], [3], [3, 0]
+]                          ]                      
