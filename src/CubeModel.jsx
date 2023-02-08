@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import Cube, { Face, Type, size, r, R } from './structure'
+import Cube, { Blocks, Type, Face, size, r, R } from './structure'
 
 
 function getFaceSettings(face) {
@@ -36,43 +36,33 @@ function degreesToRadians(degrees) {
   return degrees * Math.PI / 180
 }
 
-function getColor(index) {
-  switch (index) {
-    case 0:
-      return 0x8ecae6
-
-    case 2:
-      return 0x023047
-
-    case 6:
-      return 0x8ac926
-
-    case 8:
-      return 0xfb8500
-
-    case 18:
-      return 0xbc6c25
-
-    case 20:
-      return 0x606c38
-
-    case 24:
-      return 0xffafcc
-
-    case 26:
-      return 0x48cae4
-
-    default:
-      return 0xff0000
-  }
-}
-
 
 const log = console.log
 const cube = new Cube()
 const rotateInit = { face: null, moving: false, angle: 0, target: 0, delta: -1 }
 
-log('%cCube Initialize', 'color:red; font-size:1rem')
+log('%cCube Initialized', 'color:red; font-size:1rem')
+log(cube)
+
+/* TODO:
+[√] add blocks to pieces
+[-] on cube.rotateFace rotate also face blocks + switch blocks between pieces
+[-] rename variables names at structure.js
+*/
+
+function PieceMaterial(props) {
+  const piece = props.piece
+
+  return (
+    piece.materials.map((material, index) => (
+      <meshStandardMaterial
+        key={index}
+        attach={`material-${material}`}
+        color={Blocks.getValue(piece.blocks[index])} // blocks[index] = block / undefined
+      />
+    ))
+  )
+}
 
 export default function CubeModel() {
   const [clockwise, setClockwise] = useState(true)
@@ -90,7 +80,7 @@ export default function CubeModel() {
       mesh.rotation.x = 0
       mesh.rotation.y = 0
       mesh.rotation.z = 0
-      // TODO: set position to realPos
+      // reset to real position
       const [x, y, z] = piece.realPos
       mesh.position.x = x
       mesh.position.y = y
@@ -99,10 +89,9 @@ export default function CubeModel() {
   }
 
   useEffect(() => {
-    log('effect called')
-
-    window.onkeydown = e => e.key === 'Shift' && setClockwise(false)
-    window.onkeyup = e => e.key === 'Shift' && setClockwise(true)
+    log('effect called []')
+    window.addEventListener('keydown', e => e.key === 'Shift' && setClockwise(false))
+    window.addEventListener('keyup', e => e.key === 'Shift' && setClockwise(true))
   }, [])
 
   useEffect(() => {
@@ -166,7 +155,7 @@ export default function CubeModel() {
           setFace(cube.getFace(selectedFace))
         }}>
         <boxGeometry args={[size, size, size]} />
-        <meshStandardMaterial color={getColor(index)} />
+        <PieceMaterial piece={piece} />
       </mesh>
     ))
   )
