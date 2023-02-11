@@ -49,3 +49,25 @@ mid = [
 top_layer = [              bottom_layer = [          
     [2, 1], [2], [2, 0]        [3, 1], [3], [3, 0]
 ]                          ]                      
+
+
+const updateMeshesMaterials = () => {
+    log('len', face.current.length)
+    face.current.forEach((piece, idx) => {
+
+        const mesh = getMesh(idx)
+        const materials = cube.current.getIndex(piece).materials
+
+        log(mesh.material.map(mat => mat.color))
+        log(materials)
+
+        // materials.forEach((mat, matIndex) => {
+        //   const pieceColor = Blocks.getValue(piece.blocks[matIndex])
+        //   const [r, g, b] = hexToRGB(pieceColor)
+        //   const color = mesh.material[mat].color
+        //   color.r = r / 510
+        //   color.g = g / 510
+        //   color.b = b / 510
+        // })
+    })
+}
