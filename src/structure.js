@@ -27,7 +27,7 @@ export const Blocks = {
   },
 
   getValue(block) {
-    switch (block) {
+    switch (block === undefined ? null : block.value) {
       case this.red:
         return 0xff4040
       case this.orange:
@@ -144,7 +144,7 @@ function insert(array, value) {
   array.splice(0, 0, value)
 }
 
-class NewPiece {
+class Piece {
   constructor(idx, position, blocks) {
     [this.x, this.y, this.z] = position
     this.idx = idx
@@ -164,7 +164,7 @@ class NewPiece {
   }
 }
 
-class NewCube {
+class Cube {
   constructor() {
     this.pieces = [] // 1D array
     this.data = []   // 3D array
@@ -180,8 +180,11 @@ class NewCube {
 
         for (let x = 0; x < 3; x++) {
           const materials = this.#getMaterials(y, middle[x])
-          const blocks = materials.map(material => Blocks.getInitial(material))
-          const piece = new NewPiece(pieceIdx, [x, y, z], blocks)
+          const blocks = materials.map(material => ({
+            value: Blocks.getInitial(material),
+            index: material
+          }))
+          const piece = new Piece(pieceIdx, [x, y, z], blocks)
 
           for (let i = 0; i < 6; i++) {
             if (!materials.includes(i))
@@ -248,7 +251,7 @@ class NewCube {
     return facePieces
   }
 
-  rotate(face, clockwise) {
+  rotate(faceId, face, clockwise) {
     let [start, end, delta] = [0, Face.angles.length - 2, 1]
     if (clockwise) {
       start = Face.angles.length - 1
@@ -256,13 +259,12 @@ class NewCube {
       delta = -1
     }
 
-    let i = start, j
-
     const dims = [
-      face[Face.angles[i]].getDimensions(),
-      face[Face.angles[i + delta]].getDimensions()
+      face[Face.angles[start]].getDimensions(),
+      face[Face.angles[start + delta]].getDimensions()
     ]
 
+    let i = start
     while (i !== end) {
       const [current, next] = [Face.angles[i], Face.angles[i + 2 * delta]]
       const [currentPiece, nextPiece] = [face[current], face[next]]
@@ -273,15 +275,41 @@ class NewCube {
       currentPiece.setDimensions(nextX, nextY, nextZ)
 
       i += delta
+      this.#rotateBlocks(faceId, currentPiece, current, next)
     }
 
-    for (j = 0; j < 2; j++) {
-      const currentPiece = face[Face.angles[i + j * delta]]
+    for (let j = 0; j < 2; j++) {
+      const [current, next] = [Face.angles[end + j * delta], Face.angles[start + j * delta]]
+      const currentPiece = face[current]
 
       const [nextX, nextY, nextZ] = dims[j]
 
       this.data[nextZ][nextY][nextX].idx = currentPiece.idx
       currentPiece.setDimensions(nextX, nextY, nextZ)
+
+      this.#rotateBlocks(faceId, currentPiece, current, next)
+    }
+  }
+
+  #rotateBlocks(face, piece, current, next) {
+    if (face === Face.top || face === Face.bottom)
+      return
+    const blocks = piece.blocks
+    // edges
+    if (next === 5 || current === 5) {
+      blocks.reverse()
+      return
+    }
+    // corners
+    switch (next) {
+      case 2:
+      case 6:
+        blocks.push(blocks.shift())
+        break
+      case 0:
+      case 8:
+        insert(blocks, blocks.pop())
+      default:
     }
   }
 
@@ -326,4 +354,4 @@ class NewCube {
   }
 }
 
-export default NewCube
+export default Cube
