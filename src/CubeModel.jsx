@@ -1,22 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import NewCube, { Blocks, Type, Face, size, r, R, transform } from './structure'
+import Cube, { Blocks, Type, Face, size, r, R, transform } from './structure'
 
 function degreesToRadians(degrees) {
   return degrees * Math.PI / 180
 }
 
 const log = console.log
-const rotateInit = { moving: false, angle: 0, target: 0, delta: -1 }
+const rotateInit = { faceId: null, moving: false, angle: 0, target: 0, delta: -1 }
 
 
 export default function CubeModel() {
-  const cube = useRef(new NewCube())
+  const cube = useRef(new Cube())
   const meshes = useRef([])
   const rotate = useRef(rotateInit)
   const settings = useRef(Face.getSettings())
   const face = useRef(null)
-  const [clockwise, setClockwise] = useState(true)
+  const innerColor = useRef({})
+  const clockwise = useRef(true)
 
   const initMesh = mesh => {
     if (!meshes.current.includes(mesh))
@@ -27,9 +28,10 @@ export default function CubeModel() {
 
   const rotateMeshes = idx => {
     const selectedFace = Face.get(idx)
-    const delta = clockwise ? -1 : 1
+    const delta = clockwise.current ? -1 : 1
 
     rotate.current = {
+      faceId: selectedFace,
       moving: true,
       angle: 0,
       target: 90 * delta,
@@ -53,32 +55,60 @@ export default function CubeModel() {
     })
   }
 
+  const updateMeshMaterials = () => {
+    face.current.forEach(piece => {
+      const blocks = piece.blocks
+      const mesh = getMesh(piece.idx)
+      const { materials } = cube.current.getData(piece)
+
+      const materialColors = blocks.map((block, blockIndex) => {
+        const materialColor = mesh.material[block.index].color
+        mesh.material[block.index].color = innerColor.current
+        block.index = materials[blockIndex]
+        return materialColor
+      })
+
+      materialColors.forEach((materialColor, index) =>
+        mesh.material[materials[index]].color = materialColor)
+    })
+  }
+
 
   useEffect(() => {
-    log('effect called []')
-    window.addEventListener('keydown', e => e.key === 'Shift' && setClockwise(false))
-    window.addEventListener('keyup', e => e.key === 'Shift' && setClockwise(true))
+    innerColor.current = getMesh(13).material[0].color // idx = 13, core
+
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Shift') {
+        if (clockwise.current)
+          log('direction: counterclockwise')
+        clockwise.current = false
+      }
+    })
+
+    window.addEventListener('keyup', e => {
+      if (e.key === 'Shift') {
+        if (!clockwise.current)
+          log('direction: clockwise')
+        clockwise.current = true
+      }
+    })
   }, [])
-
-  useEffect(() => {
-    log('direction:', clockwise ? 'clockwise' : 'counterclockwise')
-  }, [clockwise])
 
   useFrame(() => {
     if (face.current == null)
       return // if haven't clicked on center / completed rotation, wait...
 
-    const { angle, target, delta } = rotate.current
+    const { faceId, angle, target, delta } = rotate.current
 
     // if cube completed full 90deg rotation, stop
     if (angle === target + delta) {
-      cube.current.rotate(face.current, delta === -1)
+      cube.current.rotate(faceId, face.current, delta === -1)
 
       resetMeshes()
+      updateMeshMaterials()
 
       rotate.current = { ...rotateInit }
       face.current = null
-
       return
     }
 
@@ -115,7 +145,7 @@ export default function CubeModel() {
           rotateMeshes(idx)
         }}>
         <boxGeometry args={[size, size, size]} />
-        { // calls once, no React rendering...
+        {
           cube.current.getData(piece).materials.map((material, index) => (
             <meshStandardMaterial
               key={index}
