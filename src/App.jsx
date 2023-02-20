@@ -2,12 +2,14 @@ import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import CubeModel from './CubeModel'
+import VisibleLight from './VisibleLight'
 
 export default function App() {
   return (<>
     <Canvas>
       <OrbitControls />
       <ambientLight />
+      <VisibleLight position={[10, 10, 10]} />
 
       <CubeModel />
 
