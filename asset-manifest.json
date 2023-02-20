@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/3d-app/static/css/main.7869b6dd.css",
+    "main.js": "/3d-app/static/js/main.7568d3e7.js",
+    "index.html": "/3d-app/index.html",
+    "main.7869b6dd.css.map": "/3d-app/static/css/main.7869b6dd.css.map",
+    "main.7568d3e7.js.map": "/3d-app/static/js/main.7568d3e7.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.7869b6dd.css",
+    "static/js/main.7568d3e7.js"
+  ]
+}
